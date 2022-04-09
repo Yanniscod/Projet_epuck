@@ -1,3 +1,10 @@
+Scripts_python
+lib
+.cproject
+.project
+.DS_Store
+language.settings.xml
+
 # Prerequisites
 *.d
 
