@@ -19,9 +19,9 @@ extern messagebus_t bus;
 extern parameter_namespace_t parameter_root;
 
 void SendUint8ToComputer(uint8_t* data, uint16_t size);
-void detect_obst(void);
-void rotate_one_sec(int angle);
-int speed_2_deg_rota(int speed);
+//void detect_obst(void);
+//void rotate_one_sec(int angle);
+//int speed_2_deg_rota(int speed);
 #ifdef __cplusplus
 }
 #endif
