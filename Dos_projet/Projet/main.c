@@ -64,8 +64,9 @@ int main(void){
     usb_start();
     proximity_start();
 	motors_init();
-	right_motor_set_speed(BASE_MOTOR_SPEED);
-	left_motor_set_speed(BASE_MOTOR_SPEED);
+	//right_motor_set_speed(BASE_MOTOR_SPEED);
+	//left_motor_set_speed(BASE_MOTOR_SPEED);
+	move();
 	detect_obst_start();
 	 while(1){
 		 /*

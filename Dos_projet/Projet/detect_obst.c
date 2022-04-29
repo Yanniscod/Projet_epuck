@@ -4,38 +4,14 @@
 #include <usbcfg.h>
 #include <chprintf.h>
 #include <detect_obst.h>
-
-
+#include <move.h>
 #include <main.h>
 #include <motors.h>
 #include <process_image.h>
 
-#define ZERO 0
-#define IR1 0
-#define IR2 1
-#define IR3 2
-#define IR4 3
-#define IR5 4
-#define IR6 5
-#define IR7 6
-#define IR8 7
-#define NO_OBST 8
-#define OBST_THRES 450
-#define OBST_THRES_SIDE 200  // smaller than obst_thres, otherwise IR2/7 keeps getting higher values -> the robot keeps rotating
-#define ERROR_THRES 30
-#define DEG_THRES 5 //[deg]
-#define MAX_SUM_ERROR 10000
-#define SPEED_WHEEL_45DEG_1S 320	//	step/s
-#define QUART_DE_TOUR 90	// degrees
-#define SPEEDTOANGLE 0.0277f //1/(DEG_2_STEP/2)*THD_OBST_TIME_MS/1000
-#define TIERS_DE_TOUR 58
-#define DEG_2_STEP  7.21f // 7.21 step/deg, obtained experimentally
-#define KP 1.50f
-#define KI 0.05f
-#define THD_OBST_TIME_MS 109
-#define BASE_MOTOR_SPEED 400
+//static int kp = 0;
 
-static THD_WORKING_AREA(waDetectObst, 180); // 168 bits needed for the initialization of our variables
+static THD_WORKING_AREA(waDetectObst, 200); // 176 bits needed for the initialization of our variables
 static THD_FUNCTION(DetectObst, arg) {
 
     chRegSetThreadName(__FUNCTION__);
@@ -45,15 +21,16 @@ static THD_FUNCTION(DetectObst, arg) {
 
     //int16_t speed = 0;
 
-	static int8_t cmpt_rot_deg = 0; // goes from -128deg to 127 deg, might need 16 bits in case we modify the application
-
+	static int16_t cmpt_rot_deg = 0; // goes from -32768 -> 32767
+	//int16_t speed_PID = 0; // max error of 0.05*MAX_SUM_ERROR + KP * MAX_ERROR = ±756, so 16 bits needed
+	set_bool(GO, 1); // the robot moves
+	set_bool(FORWARD, 1);
+	//uint16_t prox_1, prox_2, prox_7, prox_8; // for the values of the proximity sensors
+	//uint8_t prox_obst = 8;
+	systime_t time_1 = 0;
     while(1){
-        //time = chVTGetSystemTime();
-
-    	//static float sum_error = 0;
-    	int16_t speed_PID = 0; // max error of 0.05*MAX_SUM_ERROR + KP * MAX_ERROR = ±756, so 16 bits needed
-    	//systime_t time_1 = 0;
     	//systime_t time_2 = 0;
+    	int16_t speed_PID = 0;
     	uint16_t prox_1, prox_2, prox_7, prox_8; // for the values of the proximity sensors
     	uint8_t prox_obst = 8;			// to know which sensor is the closest to the obstacle, 0 already taken by IR1, so we chose 8
     	prox_1=get_calibrated_prox(IR1);
@@ -82,26 +59,34 @@ static THD_FUNCTION(DetectObst, arg) {
     	//chprintf((BaseSequentialStream *)&SD3,"Capteur d'obstacle = %-7d\r\n", get_calibrated_prox(prox_obst));
 
     	if (prox_obst != NO_OBST){ // if there is an obstacle, avoid it by rotating and save how much we rotated
+    		//systlock
+    		//chSysLock();
+    		set_bool(FORWARD, 0);
     		switch(prox_obst){
     		case 0: // 90deg to the left
-    			rotate_one_sec(-QUART_DE_TOUR);
+    			set_angle_rota(-QUART_DE_TOUR);
+    			//rotate_one_sec(-QUART_DE_TOUR);
     			cmpt_rot_deg += (-QUART_DE_TOUR);
     			break;
     		case 1: // (90-(49-17))deg = 58deg to the left
-    			rotate_one_sec(-TIERS_DE_TOUR);
+    			set_angle_rota(-TIERS_DE_TOUR);
+    			//rotate_one_sec(-TIERS_DE_TOUR);
     			cmpt_rot_deg += (-TIERS_DE_TOUR);
     			break;
     		case 6: // 58deg to the right
-    			rotate_one_sec(TIERS_DE_TOUR);
+    			set_angle_rota(TIERS_DE_TOUR);
+    			//rotate_one_sec(TIERS_DE_TOUR);
     			cmpt_rot_deg += TIERS_DE_TOUR;
     			break;
     		case 7: // 90deg to the right
-    			rotate_one_sec(QUART_DE_TOUR);
+    			set_angle_rota(QUART_DE_TOUR);
+    			//rotate_one_sec(QUART_DE_TOUR);
     			cmpt_rot_deg += QUART_DE_TOUR;
     			break;
     		default:
     			break;
     		}
+    		//chSysUnlock();
     		chThdSleepMilliseconds(1000); // to rotate, constants were set according to 1 sec of rotation
     	}
 
@@ -117,51 +102,71 @@ static THD_FUNCTION(DetectObst, arg) {
     		}
 
     	error = OBST_THRES_SIDE - prox_near_obst;
-
     	if(abs(error) < ERROR_THRES){
     		error = 0;
     	}
 
-    	chprintf((BaseSequentialStream *)&SD3, "Error : %-7d prox_obst : %-7d\r\n" , error, prox_near_obst );
+    	//chprintf((BaseSequentialStream *)&SD3, "Error : %-7d prox_obst : %-7d\r\n" , error, prox_near_obst );
 
     	sum_error += error;
-
-    	if(sum_error > MAX_SUM_ERROR){	// to avoid an uncontrolled growth
+    	if(sum_error > MAX_SUM_ERROR){	// to avoid an uncontrolled growth, to modify
     	sum_error = MAX_SUM_ERROR;
     	}else if(sum_error < -MAX_SUM_ERROR){
     	sum_error = -MAX_SUM_ERROR;
     	}
-
+    	/*
+    	switch(get_selector()){
+    		case 0 :
+    			kp = 1;
+    			break;
+    		case 1 :
+    			kp = 1.2;
+    			break;
+    		case 2 :
+    			kp = 2;
+    			break;
+    		default :
+    			break;
+    	}
+*/
     	speed_PID = KP * error + KI * sum_error; // speed of the right or left wheel to add to the base speed
-    	chprintf((BaseSequentialStream *)&SD3, "Speed PID: %-7d compteur: %-7d\r\n", speed_PID, cmpt_rot_deg);
+    	//chprintf((BaseSequentialStream *)&SD3, "Speed PID: %-7d compteur: %-7d\r\n", speed_PID, cmpt_rot_deg);
 
     	//time_1 = chVTGetSystemTime();
 
     	if (cmpt_rot_deg < 0){	// adds the speed to the correct wheel, divides it by 2 to split it to both wheels, same result
-    		right_motor_set_speed(BASE_MOTOR_SPEED - speed_PID); // to go right
-    		left_motor_set_speed(BASE_MOTOR_SPEED + speed_PID);
+    		set_speed_rota(speed_PID);
+    		//right_motor_set_speed(BASE_MOTOR_SPEED - speed_PID); // to go right
+    		//left_motor_set_speed(BASE_MOTOR_SPEED + speed_PID);
     		//cmpt_rot_deg += speed_2_deg(speed_PID);
     		cmpt_rot_deg += speed_PID*SPEEDTOANGLE; // translates the additional speed in degrees, to substract them from the counter
     	} else {
-    		right_motor_set_speed(BASE_MOTOR_SPEED + speed_PID); // to go left
-    		left_motor_set_speed(BASE_MOTOR_SPEED - speed_PID);
+    		set_speed_rota(-speed_PID);
+    		//right_motor_set_speed(BASE_MOTOR_SPEED + speed_PID); // to go left
+    		//left_motor_set_speed(BASE_MOTOR_SPEED - speed_PID);
     		//cmpt_rot_deg -= speed_2_deg(speed_PID);
     		cmpt_rot_deg -= speed_PID*SPEEDTOANGLE;
     			}
+    	time_1 = chVTGetSystemTime();
+    	//chprintf((BaseSequentialStream *)&SD3, "Counter: %-7d Error : %-7d Speed : %-7d Time : %-7d", cmpt_rot_deg, error, speed_PID, time_1);
     	//time_1 = chVTGetSystemTime(); // to obtain THD_OBST_TIME_MS experimentally
 
     	//time_2 = chVTGetSystemTime();
 
-    	//chprintf((BaseSequentialStream *)&SD3, "time1 = %-7d time2 = %-7d\r\n",time_1, time_2); // 107ms
+    	//chprintf((BaseSequentialStream *)&SD3, "time1 = %-7d time2 = %-7d\r\n",time_1, time_2); // 102ms
     	//chprintf((BaseSequentialStream *)&SD3,"Angle tourne : %-7d Compteur : %-7d\r\n", speed_2_deg_rota(speed_PID), cmpt_rot_deg);
     	}
+    	/*
     	else{
     		right_motor_set_speed(BASE_MOTOR_SPEED);
     		left_motor_set_speed(BASE_MOTOR_SPEED);
     	}
-
+    	 */
     	if(fabs(cmpt_rot_deg) < DEG_THRES){
     		cmpt_rot_deg = 0;
+    		// robot stops rotating and goes forward
+    		set_bool(ROTA_TYPE, 0);
+    		set_bool(FORWARD, 1);
     	}
 
     	//chprintf((BaseSequentialStream *)&SDU1,"IR3= %-7d IR6= %-7d\r\n", prox_3, prox_6);
@@ -174,13 +179,6 @@ static THD_FUNCTION(DetectObst, arg) {
         //100Hz
        // chThdSleepUntilWindowed(time, time + MS2ST(100));
     }
-
-void rotate_one_sec(int angle){
-	int16_t speed = DEG_2_STEP /2 * angle;
-	right_motor_set_speed(-speed);
-	left_motor_set_speed(speed);
-	 chprintf((BaseSequentialStream *)&SD3, "Speed : %-7d", speed);
-}
 
 void detect_obst_start(void){
 	chThdCreateStatic(waDetectObst, sizeof(waDetectObst), NORMALPRIO, DetectObst, NULL);
