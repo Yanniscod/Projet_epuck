@@ -16,26 +16,30 @@ extern "C" {
 #define IR1 0
 #define IR2 1
 #define IR3 2
-#define IR4 3
-#define IR5 4
+//#define IR4 3
+//#define IR5 4
 #define IR6 5
 #define IR7 6
 #define IR8 7
 #define NO_OBST 8
-#define OBST_THRES 350
-#define OBST_THRES_SIDE 200
-#define ERROR_THRES 30
-#define DEG_THRES 3 //[deg]
+#define OBST_THRES 250
+#define OBST_THRES_SIDE 125
+#define ERROR_THRES 20
+//#define DEG_THRES 4 //[deg]
 #define MAX_SUM_ERROR 10000
 #define SPEED_WHEEL_45DEG_1S 320	//	step/s
 #define QUART_DE_TOUR 90	// degrees
-#define SPEEDTOANGLE 0.025f //1/(DEG_2_STEP/2)*THD_OBST_TIME_MS/1000
+#define SPEEDTOANGLE 0.0235f //1/(DEG_2_STEP/2)*THD_OBST_TIME_MS/1000 * corrective factor for the motor (0.8)
 #define TIERS_DE_TOUR 58
 #define DEG_2_STEP  7.21f // 7.21 step/deg, obtained experimentally
-#define KP 1.50f
-#define KI 0.05f
-#define THD_OBST_TIME_MS 101
-#define BASE_MOTOR_SPEED 400
+#define KP 1.80f
+#define KI 0.2f
+//#define THD_OBST_TIME_MS 101
+#define BASE_MOTOR_SPEED 350
+
+#define STEPS_TURN 320
+#define STEPS_THRESHOLD 15
+
 #define GO 0
 #define FORWARD 1
 #define ROTA_TYPE 2

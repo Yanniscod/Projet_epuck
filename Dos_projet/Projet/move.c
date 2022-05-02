@@ -38,13 +38,13 @@ static THD_FUNCTION(Move, arg) {
 					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 					time_4 = chVTGetSystemTime(); // 101ms
 					//chprintf((BaseSequentialStream *)&SD3, "Speed Rot : %-7d time_speed_move = %-7d\r\n", speed_rota, time_4);
-					chprintf((BaseSequentialStream *)&SD3,"Time_1 : %-7d Time_2 %-7d\r\n",time_3, time_4);
+					//chprintf((BaseSequentialStream *)&SD3,"Time_1 : %-7d Time_2 %-7d\r\n",time_3, time_4);
 				}
 			}else{
 			right_motor_set_speed(ZERO);
 			left_motor_set_speed(ZERO);
 		}
-		chThdSleepMilliseconds(100); // thread each 100ms
+		chThdSleepMilliseconds(50); // thread each 100ms
 	}
 }
 
