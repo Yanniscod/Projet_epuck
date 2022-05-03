@@ -11,21 +11,18 @@ extern "C" {
 
 
 //constants for the differents parts of the project
-#define IMAGE_BUFFER_SIZE		640
+#define IMAGE_BUFFER_SIZE	640
 #define ZERO 0
 #define IR1 0
 #define IR2 1
 #define IR3 2
-//#define IR4 3
-//#define IR5 4
 #define IR6 5
 #define IR7 6
 #define IR8 7
 #define NO_OBST 8
-#define OBST_THRES 250
-#define OBST_THRES_SIDE 125
+#define OBST_THRES 200
+#define OBST_THRES_SIDE 140
 #define ERROR_THRES 20
-//#define DEG_THRES 4 //[deg]
 #define MAX_SUM_ERROR 10000
 #define SPEED_WHEEL_45DEG_1S 320	//	step/s
 #define QUART_DE_TOUR 90	// degrees
@@ -33,12 +30,12 @@ extern "C" {
 #define TIERS_DE_TOUR 58
 #define DEG_2_STEP  7.21f // 7.21 step/deg, obtained experimentally
 #define KP 1.80f
-#define KI 0.2f
-//#define THD_OBST_TIME_MS 101
+#define KI 0.1f
 #define BASE_MOTOR_SPEED 350
 
 #define STEPS_TURN 320
 #define STEPS_THRESHOLD 15
+#define ANGLE_TO_STEPS 3.55f //STEPS_TURN/QUART_DE_TOUR
 
 #define GO 0
 #define FORWARD 1

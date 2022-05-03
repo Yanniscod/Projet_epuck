@@ -15,7 +15,6 @@
 #include "sensors/proximity.h"
 #include <process_image.h>
 
-#define BASE_MOTOR_SPEED 400
 
 	//	// CONFIGURER KP ET KI PLUS GRANDS COMME CA ON PEUTLES REGLER PLUS PRECISEMENT ET PLUS BESOIN DE FLOAT, KP=3 TROP GRAND
 
