@@ -5,15 +5,16 @@
 #include <chprintf.h>
 #include <move.h>
 #include <main.h>
+#include <motors.h>
 
 static bool go = 0; // 0 if the robot doesn't have to move, 1 if it does || 0 = stop 1 = go
 static bool forward = 0; // 0 if it has to rotate, 1 if it has to go straightforward
 static bool rota_type = 0; // 0 if it's the rotation to avoid the obstacle, 1 if it's to rectify the position
-static int speed_rota = 0;
-static int angle_rota = 0;
-//static int pos_2_reach=0;
+static int16_t speed_rota = 0;
+static int8_t turns = 0;
+
 systime_t time;
-static THD_WORKING_AREA(waMove, 512);
+static THD_WORKING_AREA(waMove, 512); // 27?
 static THD_FUNCTION(Move, arg) {
 
 	chRegSetThreadName(__FUNCTION__);
@@ -22,34 +23,33 @@ static THD_FUNCTION(Move, arg) {
 	while(1){
 		time = chVTGetSystemTime();
 		if(go == true){
-			if(forward == true){		// when going forward, the speed is set with a define
+			if(forward == true){
 				right_motor_set_speed(BASE_MOTOR_SPEED);
 				left_motor_set_speed(BASE_MOTOR_SPEED);
 			}else if(rota_type == false){
-					rotate(angle_rota);
-				}else{
-					right_motor_set_speed(BASE_MOTOR_SPEED - speed_rota);
-					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
-				}
+				rotate(turns);
 			}else{
-			right_motor_set_speed(ZERO);
-			left_motor_set_speed(ZERO);
+				right_motor_set_speed(BASE_MOTOR_SPEED - speed_rota);
+				left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 			}
-		//chThdSleepMilliseconds(50); // thread each 100ms
+		}else{
+			right_motor_set_speed(ZERO_SPEED);
+			left_motor_set_speed(ZERO_SPEED);
+		}
+		//chThdSleepMilliseconds(50);
 		chThdSleepUntilWindowed(time, time + MS2ST(20));
-		}
-		}
-
-		// to allow other source files to modify the speed
-		void set_speed_rota(int speed){
-		speed_rota =speed;
+	}
 }
 
-void set_angle_rota(int angle){
-	angle_rota =angle;
+void set_speed_rota(int16_t speed){
+	speed_rota =speed;
 }
 
-void set_bool(int bool_num, bool type){
+void set_nbr_rota(int8_t nbr_90_turns){
+	turns = nbr_90_turns;
+}
+
+void set_bool(int8_t bool_num, bool type){
 	switch(bool_num){
 	case 0:
 		go = type;
@@ -65,17 +65,17 @@ void set_bool(int bool_num, bool type){
 	}
 }
 
-void rotate(int angle){
-	if(angle >0){
+void rotate(int8_t nbr_90_turns){
+	if(nbr_90_turns >0){
 		right_motor_set_speed(-BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
-		if((left_motor_get_pos()) >= (STEPS_TURN)){
+		if((left_motor_get_pos()) >= (STEPS_TURN*nbr_90_turns)){
 			rota_type = true;
 		}
 	}else{
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(-BASE_MOTOR_SPEED);
-		if((right_motor_get_pos()) >= (STEPS_TURN)){
+		if((left_motor_get_pos()) <= (STEPS_TURN*nbr_90_turns)){
 			rota_type = true;
 		}
 	}

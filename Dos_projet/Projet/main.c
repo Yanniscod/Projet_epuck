@@ -14,11 +14,9 @@
 #include <detect_obst.h>
 #include "sensors/proximity.h"
 #include <process_image.h>
+#include <move.h>
 
-
-	//	// CONFIGURER KP ET KI PLUS GRANDS COMME CA ON PEUTLES REGLER PLUS PRECISEMENT ET PLUS BESOIN DE FLOAT, KP=3 TROP GRAND
-
-systime_t time_1,time_2;
+//systime_t time_1,time_2;
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
 CONDVAR_DECL(bus_condvar);
@@ -41,17 +39,6 @@ static void serial_start(void)
 
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
-/*
-int speed_2_deg_rota(int speed){ // THD_OBST_TIME_MS is the time (ms) during which the chosen wheel turns at the increased speed,
-	int8_t angle = 0;	//  we have to take it into account because our angle which we want to reduce is affected by it angle = speed/(DEG_2_STEP/2) * THD_OBST_TIME_MS / 1000; // [deg] = [step/s]*[s]/[step/deg], DEG_2_STEP is float so calculation done in float, optimizable?
-	angle = speed*SPEEDTOANGLE; // happens each 107ms
-	//chprintf((BaseSequentialStream *)&SD3,"Speed fct : %-7d Angle fct : %-7d\r\n", speed, angle);
-	return angle;
-}
-*/
-
-//void detect_obst(void){
-
 
 int main(void){
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN; //initiate GPIOC/B clocks
@@ -63,32 +50,13 @@ int main(void){
     usb_start();
     proximity_start();
 	motors_init();
-	//right_motor_set_speed(BASE_MOTOR_SPEED);
-	//left_motor_set_speed(BASE_MOTOR_SPEED);
 	move();
 	detect_obst_start();
 	 while(1){
-		 /*
-		 rotate_one_sec(180);
-		 chThdSleepMilliseconds(1000);
-		 right_motor_set_speed(0);
-		left_motor_set_speed(0);
-		chThdSleepMilliseconds(1000);
-		*/
 		 /* Infinite loop. */
 		 chThdSleepMilliseconds(1000);
 	 }
-    }
-    /*
-    //starts the camera
-    dcmi_start();
-	po8030_start();
-
-	//starts the threads for the pi regulator and the processing of the image
-	pi_regulator_start();
-	process_image_start();
-*/
-    /* Infinite loop. */
+}
 
 #define STACK_CHK_GUARD 0xe2dee396
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
