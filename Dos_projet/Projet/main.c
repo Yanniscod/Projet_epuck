@@ -16,7 +16,6 @@
 #include <process_image.h>
 #include <move.h>
 
-//systime_t time_1,time_2;
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
 CONDVAR_DECL(bus_condvar);
@@ -50,6 +49,12 @@ int main(void){
     usb_start();
     proximity_start();
 	motors_init();
+	 //starts the camera
+	dcmi_start();
+	po8030_start();
+	//right_motor_set_speed(BASE_MOTOR_SPEED);
+	//left_motor_set_speed(BASE_MOTOR_SPEED);
+	process_image_start();
 	move();
 	detect_obst_start();
 	 while(1){

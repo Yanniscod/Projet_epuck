@@ -17,7 +17,7 @@ static THD_FUNCTION(DetectObst, arg) {
     systime_t time;
     static int16_t steps_to_reach = 0;
     static bool reset = 0;
-	set_bool(GO, 1); // the robot moves
+	//set_bool(GO, 1); // the robot moves
 	set_bool(FORWARD, 1);
 
     while(1){
