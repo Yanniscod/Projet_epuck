@@ -14,7 +14,7 @@
 #include <detect_obst.h>
 #include "sensors/proximity.h"
 #include <process_image.h>
-
+#include <move.h>
 
 	//	// CONFIGURER KP ET KI PLUS GRANDS COMME CA ON PEUTLES REGLER PLUS PRECISEMENT ET PLUS BESOIN DE FLOAT, KP=3 TROP GRAND
 
@@ -63,8 +63,12 @@ int main(void){
     usb_start();
     proximity_start();
 	motors_init();
+	 //starts the camera
+	dcmi_start();
+	po8030_start();
 	//right_motor_set_speed(BASE_MOTOR_SPEED);
 	//left_motor_set_speed(BASE_MOTOR_SPEED);
+	process_image_start();
 	move();
 	detect_obst_start();
 	 while(1){
@@ -80,9 +84,7 @@ int main(void){
 	 }
     }
     /*
-    //starts the camera
-    dcmi_start();
-	po8030_start();
+
 
 	//starts the threads for the pi regulator and the processing of the image
 	pi_regulator_start();

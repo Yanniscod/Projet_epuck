@@ -33,9 +33,17 @@ extern "C" {
 #define KI 0.1f
 #define BASE_MOTOR_SPEED 350
 
-#define STEPS_TURN 320
+#define STEPS_TURN 319
 #define STEPS_THRESHOLD 15
 #define ANGLE_TO_STEPS 3.55f //STEPS_TURN/QUART_DE_TOUR
+
+#define MIN_LINE_WIDTH 30
+#define WIDTH_SLOPE 5
+
+#define DISTANCE_PUCK 1200 // valeur en steps à changer
+#define ROTATION 2
+#define RESET_STEPS 1
+#define MOVE_TO_PUCK 3
 
 #define GO 0
 #define FORWARD 1

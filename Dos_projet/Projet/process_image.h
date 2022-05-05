@@ -3,5 +3,6 @@
 
 float get_distance_cm(void);
 void process_image_start(void);
-uint16_t get_nbr_lines(void);
+uint8_t get_nbr_lines(void);
+bool get_img_captured(void);
 #endif /* PROCESS_IMAGE_H */

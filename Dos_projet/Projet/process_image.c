@@ -12,11 +12,15 @@
 //static float distance_cm = 0;
 static uint8_t nbr_lines=0;
 static uint8_t count_img_line=0;
+static bool img_captured = false;
 //semaphore
+
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 
 void leds_nbr_lines(void){
 
+
+	//img_captured=true;
 
 	switch(nbr_lines){
 		case 1:
@@ -130,14 +134,15 @@ static THD_FUNCTION(ProcessImage, arg) {
 				count_img_line=0;
 			}
 			prev_nbr_lines=nbr_lines;
-			chprintf((BaseSequentialStream *)&SD3,"nombre lignes = %-7d\r\n",nbr_lines);					
+			//chprintf((BaseSequentialStream *)&SD3,"nombre lignes = %-7d\r\n",nbr_lines);
 			chThdSleepMilliseconds(1000);
 		}
 		//mettre la thread en attente si on est parti chercher le puck
 		else{
 
 			palSetPad(GPIOB,GPIOB_LED_BODY);
-			leds_nbr_lines();
+			//leds_nbr_lines();
+			img_captured=true;
 			chThdSleepMilliseconds(2000);
 		}
 
@@ -164,4 +169,8 @@ void process_image_start(void){
 }
 uint8_t get_nbr_lines(void){
 	return nbr_lines;
+}
+
+bool get_img_captured(void){
+	return img_captured;
 }
