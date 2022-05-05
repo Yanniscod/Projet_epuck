@@ -25,18 +25,18 @@ void leds_nbr_lines(void){
 	switch(nbr_lines){
 		case 1:
 			palClearPad(GPIOD, GPIOD_LED1);
-		break;
+			break;
 		case 2:
 			palClearPad(GPIOD, GPIOD_LED3);
-		break;
+			break;
 		case 3:
 			palClearPad(GPIOD, GPIOD_LED5);
-		break;
+			break;
 		case 4:
 			palClearPad(GPIOD, GPIOD_LED7);
-		break;
+			break;
 		default:
-		break;
+			break;
 	}
 
 }
@@ -135,16 +135,23 @@ static THD_FUNCTION(ProcessImage, arg) {
 			}
 			prev_nbr_lines=nbr_lines;
 			//chprintf((BaseSequentialStream *)&SD3,"nombre lignes = %-7d\r\n",nbr_lines);
-			chThdSleepMilliseconds(1000);
+			chThdSleepMilliseconds(200);
 		}
 		//mettre la thread en attente si on est parti chercher le puck
-		else{
+		else if(nbr_lines==1 | nbr_lines==2){
 
 			palSetPad(GPIOB,GPIOB_LED_BODY);
 			//leds_nbr_lines();
 			img_captured=true;
 			chThdSleepMilliseconds(2000);
 		}
+		else{
+
+			count_img_line=0;
+			chThdSleepMilliseconds(50);
+
+		}
+		
 
 
 
