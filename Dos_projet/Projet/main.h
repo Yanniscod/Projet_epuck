@@ -44,10 +44,11 @@ extern "C" {
 #define MIN_LINE_WIDTH 30
 #define WIDTH_SLOPE 5
 
-#define DISTANCE_PUCK 1200 // valeur en steps à changer
-#define ROTATION 2
+#define DISTANCE_PUCK 1200 // valeur en steps à changer (1280=environ 16 cm)
 #define RESET_STEPS 1
+#define ROTATION 2
 #define MOVE_TO_PUCK 3
+#define GO_TO_GOAL 4
 
 #define GO 0
 #define FORWARD 1
