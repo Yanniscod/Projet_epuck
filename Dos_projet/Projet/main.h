@@ -36,6 +36,7 @@ extern "C" {
 #define ZERO_SPEED 0 //[step/s]
 #define BASE_MOTOR_SPEED 350 //[steps/s]
 #define ONE_TURN_90_DEG 1
+#define DISTANCE_PUCK 1200 // valeur en steps à changer (1000 steps = 13cm)
 // steps values set experimentally
 #define STEPS_TURN 319 // number of steps needed for a 90 degrees turn
 #define STEPS_THRESHOLD 15 //[steps]
@@ -44,6 +45,7 @@ extern "C" {
 #define RESET_STEPS 1
 #define ROTATION 2
 #define MOVE_TO_PUCK 3
+#define GO_TO_GOAL 4
 
 //process_image.c
 #define IMAGE_BUFFER_SIZE	640
