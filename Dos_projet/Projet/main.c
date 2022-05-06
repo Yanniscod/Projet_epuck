@@ -52,13 +52,10 @@ int main(void){
 	 //starts the camera
 	dcmi_start();
 	po8030_start();
-	//right_motor_set_speed(BASE_MOTOR_SPEED);
-	//left_motor_set_speed(BASE_MOTOR_SPEED);
 	process_image_start();
 	move();
 	detect_obst_start();
 	 while(1){
-		 /* Infinite loop. */
 		 chThdSleepMilliseconds(1000);
 	 }
 }
