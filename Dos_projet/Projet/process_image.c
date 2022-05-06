@@ -5,7 +5,7 @@
 
 #include <main.h>
 #include <camera/po8030.h>
-
+#include <motors.h>
 #include <process_image.h>
 
 
@@ -13,6 +13,7 @@
 static uint8_t nbr_lines=0;
 static uint8_t count_img_line=0;
 static bool img_captured = false;
+static uint8_t goal=1;
 //semaphore
 
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
@@ -80,8 +81,11 @@ static THD_FUNCTION(CaptureImage, arg) {
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
+
 	//Takes pixels 0 to IMAGE_BUFFER_SIZE of the line 10 + 11 (minimum 2 lines because reasons)
 	po8030_advanced_config(FORMAT_RGB565, 0, 10, IMAGE_BUFFER_SIZE, 2, SUBSAMPLING_X1, SUBSAMPLING_X1); //change line of pixel
+
+
 	dcmi_enable_double_buffering();
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
@@ -119,7 +123,11 @@ static THD_FUNCTION(ProcessImage, arg) {
 			//extracts first 5bits of the first byte
 			//takes nothing from the second byte
 			image[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
-		}		
+		}
+
+		switch (goal){
+		case 1: //capture image to get puck
+
 		//take several image so can check later if nbr line is always the same
 		if(count_img_line<10){
 			
@@ -137,25 +145,36 @@ static THD_FUNCTION(ProcessImage, arg) {
 			//chprintf((BaseSequentialStream *)&SD3,"nombre lignes = %-7d\r\n",nbr_lines);
 			chThdSleepMilliseconds(200);
 		}
-		//mettre la thread en attente si on est parti chercher le puck
-		else if(nbr_lines==1 | nbr_lines==2){
+		//image captured is correct( 1 or 2 lines)
+		else if((nbr_lines==1) | (nbr_lines==2)){
 
 			palSetPad(GPIOB,GPIOB_LED_BODY);
 			//leds_nbr_lines();
 			img_captured=true;
 			chThdSleepMilliseconds(2000);
+			goal=2;// quand image captured va detect goal line
 		}
-		else{
+		else{	//image not 1 or 2 lines retake image
 
 			count_img_line=0;
 			chThdSleepMilliseconds(50);
 
 		}
-		
+		break;
+
+		case 2: //detect line to score goal
+
+			detect_goal_line(image);
+			chThdSleepMilliseconds(200);
+
+			break;
+
+		default:
+			break;
 
 
 
-		/*
+		}			/*
 		//send to computer to see img with python
 		if(send_to_computer)
 		{
@@ -165,9 +184,31 @@ static THD_FUNCTION(ProcessImage, arg) {
 		//invert the bool
 		send_to_computer = !send_to_computer;		
 		*/
+
     }
 }
+void detect_goal_line (uint8_t *buffer){
+	uint16_t mean=0;
+	static uint8_t mean_count=0;
+	for(uint16_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
 
+			mean+=buffer[i];
+
+		}
+
+	mean/=IMAGE_BUFFER_SIZE;
+	if(mean<20){
+		mean_count+=1;
+	}
+	if(mean_count>5){
+		right_motor_set_speed(0);
+		left_motor_set_speed(0);
+		//score goal
+	}
+	//chprintf((BaseSequentialStream *)&SD3,"moyenne = %-7d\r\n",value_pxl);
+
+
+}
 
 
 void process_image_start(void){
