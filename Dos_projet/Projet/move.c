@@ -110,6 +110,7 @@ void move(void){
 }
 
 void take_puck(void){
+	static uint8_t nbr_puck;
 	static uint8_t state=1;
 	static bool puck = false;
 
@@ -128,19 +129,19 @@ void take_puck(void){
 		//rotation 90 deg
 		rotate(ONE_TURN_90_DEG); //changes value of tourne
 		if(!tourne){
-			if(puck){
-				state=4;
+			if(puck){	
+				state=GO_TO_GOAL;
 			}
 			else{state=RESET_STEPS;}
 
 		}break;
 
 	case MOVE_TO_PUCK:
-		//nbr_puck=get_nbr_lines();
+		nbr_puck=get_nbr_lines();
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 
-		if(left_motor_get_pos()>/*nbr_puck**/DISTANCE_PUCK){ //check if reach puck before rotating to pick it
+		if(left_motor_get_pos()>nbr_puck*DISTANCE_PUCK){ //check if reach puck before rotating to pick it
 			right_motor_set_speed(0);
 			left_motor_set_speed(0);
 			tourne=!tourne;
@@ -148,15 +149,18 @@ void take_puck(void){
 			state=RESET_STEPS;
 		}
 		break;
-	case 4: // end of taking puck ready for obstacle avoidance
+
+	case GO_TO_GOAL: // end of taking puck ready for obstacle avoidance
 
 		set_bool(GO, 1);
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 
 		break;
+
 	default:
 		break;
 	}
+
 }
 
