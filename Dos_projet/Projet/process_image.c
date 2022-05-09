@@ -7,7 +7,7 @@
 #include <camera/po8030.h>
 #include <motors.h>
 #include <process_image.h>
-
+#include <move.h>
 
 //static float distance_cm = 0;
 static uint8_t nbr_lines=0;
@@ -127,13 +127,10 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 		switch (goal){
 		case 1: //capture image to get puck
-
 		//take several image so can check later if nbr line is always the same
 		if(count_img_line<10){
-			
 			nbr_lines=0;
-			// now need to find out what image is by determining how many lines
-			find_nbr_lines(image);
+			find_nbr_lines(image);// now need to find out what image is by determining how many lines
 
 			if(prev_nbr_lines==nbr_lines){
 				count_img_line+=1;//need 10 image in a row with same number of lines to go further
@@ -147,25 +144,21 @@ static THD_FUNCTION(ProcessImage, arg) {
 		}
 		//image captured is correct( 1 or 2 lines)
 		else if((nbr_lines==1) | (nbr_lines==2)){
-
-			palSetPad(GPIOB,GPIOB_LED_BODY);
 			//leds_nbr_lines();
 			img_captured=true;
 			chThdSleepMilliseconds(2000);
 			goal=2;// quand image captured va detect goal line
 		}
 		else{	//image not 1 or 2 lines retake image
-
 			count_img_line=0;
 			chThdSleepMilliseconds(50);
-
 		}
 		break;
 
 		case 2: //detect line to score goal
 
 			detect_goal_line(image);
-			chThdSleepMilliseconds(200);
+			chThdSleepMilliseconds(50);
 
 			break;
 
@@ -188,26 +181,23 @@ static THD_FUNCTION(ProcessImage, arg) {
     }
 }
 void detect_goal_line (uint8_t *buffer){
-	uint16_t mean=0;
+	static uint16_t mean=0;
 	static uint8_t mean_count=0;
 	for(uint16_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
-
-			mean+=buffer[i];
-
-		}
-
-	mean/=IMAGE_BUFFER_SIZE;
-	if(mean<20){
-		mean_count+=1;
+		mean+=buffer[i];
 	}
-	if(mean_count>5){
-		right_motor_set_speed(0);
-		left_motor_set_speed(0);
+	mean/=IMAGE_BUFFER_SIZE;
+	if(mean<25){//want 4 images in a row with mean intensity <25
+		mean_count+=1;
+	}else{
+		mean_count=0;
+	}
+	if(mean_count>4){
+		set_bool(GO,0);
+		palSetPad(GPIOB,GPIOB_LED_BODY);
 		//score goal
 	}
-	//chprintf((BaseSequentialStream *)&SD3,"moyenne = %-7d\r\n",value_pxl);
-
-
+	//chprintf((BaseSequentialStream *)&SD3,"moyenne = %-7d\r\n",mean);
 }
 
 
