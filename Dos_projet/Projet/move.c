@@ -14,6 +14,7 @@ static bool rota_type = 0; // 0 if it's the rotation to avoid the obstacle, 1 if
 static bool tourne = true;
 static int16_t speed_rota = 0;
 static int8_t turns = 0;
+static bool got_puck = false;
 
 systime_t time;
 static THD_WORKING_AREA(waMove, 512); // 27? (6x1 + 16x1 + 8x2) +arg_fcts(16x1 + 4x8  + 1x1) = 38 + 49 = 87
@@ -36,9 +37,14 @@ static THD_FUNCTION(Move, arg) {
 					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 				}
 		}else{
-			if(get_img_captured()){
+			if((get_img_captured())&& (!got_puck) ){
 			take_puck();
 			}
+			else if(got_puck){
+				right_motor_set_speed(0);
+				left_motor_set_speed(0);
+			}
+
 		}
 		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
 
@@ -151,9 +157,9 @@ void take_puck(void){
 		break;
 
 	case GO_TO_GOAL: // end of taking puck ready for obstacle avoidance
-
+		got_puck=true;
 		set_bool(GO, 1);
-		right_motor_set_speed(BASE_MOTOR_SPEED);
+		right_motor_set_speed(BASE_MOTOR_SPEED);//a enlever apres test
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 
 		break;
