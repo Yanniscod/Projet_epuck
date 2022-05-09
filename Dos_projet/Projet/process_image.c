@@ -187,12 +187,12 @@ void detect_goal_line (uint8_t *buffer){
 		mean+=buffer[i];
 	}
 	mean/=IMAGE_BUFFER_SIZE;
-	if(mean<25){//want 4 images in a row with mean intensity <25
+	if(mean<31){//want 4 images in a row with mean intensity <25
 		mean_count+=1;
 	}else{
 		mean_count=0;
 	}
-	if(mean_count>4){
+	if(mean_count>3){
 		set_bool(GO,0);
 		palSetPad(GPIOB,GPIOB_LED_BODY);
 		//score goal

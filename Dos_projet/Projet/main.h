@@ -35,13 +35,14 @@ extern "C" {
 #define ROTA_TYPE 2
 #define ZERO_SPEED 0 //[step/s]
 #define BASE_MOTOR_SPEED 350 //[steps/s]
+#define ZERO_TURN 0
 #define ONE_TURN_90_DEG 1
-#define DISTANCE_PUCK 1077 // valeur en steps à changer (1000 steps = 13cm)
 // steps values set experimentally
 #define STEPS_TURN 319 // number of steps needed for a 90 degrees turn
 #define STEPS_THRESHOLD 15 //[steps]
 #define ZERO_STEP 0 //[steps]
-#define DISTANCE_PUCK 1077 //[steps], distance between the pucks
+#define DISTANCE_PUCK 800 //[steps], distance between the pucks 8cm
+#define ZERO_POS 0
 #define RESET_STEPS 1
 #define ROTATION 2
 #define MOVE_TO_PUCK 3

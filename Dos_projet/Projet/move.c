@@ -17,7 +17,7 @@ static int8_t turns = 0;
 static bool got_puck = false;
 
 systime_t time;
-static THD_WORKING_AREA(waMove, 512); // 27? (6x1 + 16x1 + 8x2) +arg_fcts(16x1 + 4x8  + 1x1) = 38 + 49 = 87
+static THD_WORKING_AREA(waMove, 64); // 27? (6x1 + 16x1 + 8x2) +arg_fcts(16x1 + 4x8  + 1x1) = 38 + 49 = 87
 static THD_FUNCTION(Move, arg) {
 
 	chRegSetThreadName(__FUNCTION__);
@@ -27,10 +27,10 @@ static THD_FUNCTION(Move, arg) {
 		time = chVTGetSystemTime();
 
 		if(go == true){
-			if(forward == true){
+			if(forward){
 				right_motor_set_speed(BASE_MOTOR_SPEED);
 				left_motor_set_speed(BASE_MOTOR_SPEED);
-			}else if(rota_type == false){
+			}else if(!rota_type){
 					rotate(turns);
 				}else{
 					right_motor_set_speed(BASE_MOTOR_SPEED - speed_rota);
@@ -41,10 +41,31 @@ static THD_FUNCTION(Move, arg) {
 			take_puck();
 			}
 			else if(got_puck){
-				right_motor_set_speed(0);
-				left_motor_set_speed(0);
-			}
 
+				static uint8_t state_goal=1;
+
+				switch(state_goal){
+				case RESET_STEPS:
+					right_motor_set_pos(ZERO_STEP);
+					left_motor_set_pos(ZERO_STEP);
+					state_goal=ROTATION;
+					tourne=true;
+					break;
+				case ROTATION:
+					rotate(2);
+					if(!tourne){
+						state_goal=3;
+					}
+					break;
+				case 3://(egal case stop
+					right_motor_set_speed(ZERO_SPEED);
+					left_motor_set_speed(ZERO_SPEED);
+					break;
+				}
+
+
+
+			}
 		}
 		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
 
@@ -61,13 +82,13 @@ void set_nbr_rota(int8_t nbr_90_turns){
 
 void set_bool(int8_t bool_num, bool type){
 	switch(bool_num){
-	case 0:
+	case GO:
 		go = type;
 		break;
-	case 1:
+	case FORWARD:
 		forward = type;
 		break;
-	case 2:
+	case ROTA_TYPE:
 		rota_type = type;
 		break;
 	default:
@@ -78,13 +99,13 @@ void set_bool(int8_t bool_num, bool type){
 int8_t get_bool(int8_t bool_num){
 	bool status = false;
 	switch(bool_num){
-	case 0:
+	case GO:
 		status = go;
 		break;
-	case 1:
+	case FORWARD:
 		status = forward;
 		break;
-	case 2:
+	case ROTA_TYPE:
 		status = rota_type;
 		break;
 	default:
@@ -94,7 +115,7 @@ int8_t get_bool(int8_t bool_num){
 }
 
 void rotate(int8_t nbr_90_turns){
-	if(nbr_90_turns >0){
+	if(nbr_90_turns >ZERO_TURN){
 		right_motor_set_speed(-BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 		if((left_motor_get_pos()) >= (STEPS_TURN*nbr_90_turns)){
@@ -122,8 +143,8 @@ void take_puck(void){
 
 	switch (state){
 	case RESET_STEPS : // steps at 0 for rotation
-		right_motor_set_pos(0);
-		left_motor_set_pos(0);
+		right_motor_set_pos(ZERO_POS);
+		left_motor_set_pos(ZERO_POS);
 		if(!tourne){
 			state=MOVE_TO_PUCK;
 		}
@@ -148,8 +169,8 @@ void take_puck(void){
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 
 		if(left_motor_get_pos()>nbr_puck*DISTANCE_PUCK){ //check if reach puck before rotating to pick it
-			right_motor_set_speed(0);
-			left_motor_set_speed(0);
+			right_motor_set_speed(ZERO_SPEED);
+			left_motor_set_speed(ZERO_SPEED);
 			tourne=!tourne;
 			puck=true;
 			state=RESET_STEPS;
