@@ -47,7 +47,7 @@ extern "C" {
 #define ROTATION 2
 #define MOVE_TO_PUCK 3
 #define GO_TO_GOAL 4
-
+#define END 5
 //process_image.c
 #define IMAGE_BUFFER_SIZE	640
 #define MIN_LINE_WIDTH 30

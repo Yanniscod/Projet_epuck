@@ -14,7 +14,7 @@ static bool rota_type = 0; // 0 if it's the rotation to avoid the obstacle, 1 if
 static bool tourne = true;
 static int16_t speed_rota = 0;
 static int8_t turns = 0;
-static bool got_puck = false;
+//static bool got_puck = false;
 
 systime_t time;
 static THD_WORKING_AREA(waMove, 64); // 27? (6x1 + 16x1 + 8x2) +arg_fcts(16x1 + 4x8  + 1x1) = 38 + 49 = 87
@@ -37,34 +37,8 @@ static THD_FUNCTION(Move, arg) {
 					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 				}
 		}else{
-			if((get_img_captured())&& (!got_puck) ){
-			take_puck();
-			}
-			else if(got_puck){
-
-				static uint8_t state_goal=1;
-
-				switch(state_goal){
-				case RESET_STEPS:
-					right_motor_set_pos(ZERO_STEP);
-					left_motor_set_pos(ZERO_STEP);
-					state_goal=ROTATION;
-					tourne=true;
-					break;
-				case ROTATION:
-					rotate(2);
-					if(!tourne){
-						state_goal=3;
-					}
-					break;
-				case 3://(egal case stop
-					right_motor_set_speed(ZERO_SPEED);
-					left_motor_set_speed(ZERO_SPEED);
-					break;
-				}
-
-
-
+			if((get_img_captured())/*&& (!got_puck)*/ ){
+			move_puck();
 			}
 		}
 		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
@@ -136,7 +110,7 @@ void move(void){
 	chThdCreateStatic(waMove, sizeof(waMove), NORMALPRIO, Move, NULL);
 }
 
-void take_puck(void){
+void move_puck(void){
 	static uint8_t nbr_puck;
 	static uint8_t state=1;
 	static bool puck = false;
@@ -152,18 +126,29 @@ void take_puck(void){
 		state=ROTATION;
 		}
 		break;
+
 	case ROTATION:
-		//rotation 90 deg
-		rotate(ONE_TURN_90_DEG); //changes value of tourne
-		if(!tourne){
-			if(puck){	
-				state=GO_TO_GOAL;
+		if(!puck){ // first rotation to go towards puck
+			rotate(ONE_TURN_90_DEG);
+			if(!tourne){
+				state=RESET_STEPS;
 			}
-			else{state=RESET_STEPS;}
+		}else{//puck=true
+			if(get_ready_to_score()){// when detect goal rotate 180 to score
+				rotate(2);
+				if(!tourne){
+					state=END;
+				}
+			}else{ // got puck and go towards goal
+				rotate(1);
+				if(!tourne){
+					state=GO_TO_GOAL;
+				}
+			}
+		}
+		break;
 
-		}break;
-
-	case MOVE_TO_PUCK:
+	case MOVE_TO_PUCK: //move towards puck to pick it
 		nbr_puck=get_nbr_lines();
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
@@ -178,11 +163,18 @@ void take_puck(void){
 		break;
 
 	case GO_TO_GOAL: // end of taking puck ready for obstacle avoidance
-		got_puck=true;
 		set_bool(GO, 1);
 		right_motor_set_speed(BASE_MOTOR_SPEED);//a enlever apres test
 		left_motor_set_speed(BASE_MOTOR_SPEED);
+		if(get_ready_to_score()){
+			tourne=true;
+			state=RESET_STEPS;
+		}
+		break;
 
+	case END: //goal scored stop moving maybe LEDS or MUSIC???
+		right_motor_set_speed(ZERO_SPEED);
+		left_motor_set_speed(ZERO_SPEED);
 		break;
 
 	default:
