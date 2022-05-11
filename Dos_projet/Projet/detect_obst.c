@@ -9,19 +9,20 @@
 #include <motors.h>
 #include <process_image.h>
 
-static THD_WORKING_AREA(waDetectObst, 180); // 168 bits needed (16x8 + 8x1+ 32x1 (float))
+static THD_WORKING_AREA(waDetectObst, 200); // 200 (80 fonctionne) bits needed (16x8 + 8x1 + 32x2 (float))
 static THD_FUNCTION(DetectObst, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
     systime_t time;
-
     systime_t time_1;
     static int16_t steps_to_reach = 0; //bool possible
-	static float sum_error = 0;
-	set_bool(FORWARD, 1);
+	static float sum_error = 0.0;
+	static float prev_error = 0.0;
 	int16_t speed_PID = 0;
+	set_bool(GO_DRIBBLE, 1);
+	set_bool(FORWARD, 1);
 
     while(1){
     	time = chVTGetSystemTime();
@@ -48,7 +49,6 @@ static THD_FUNCTION(DetectObst, arg) {
 					prox_obst = IR7;
 				}
 			}
-
 			// if there is an obstacle, avoids it by a first rotation of 90 deg
 			if (prox_obst != NO_OBST){
 				set_bool(FORWARD, 0); // goes to rotation mode
@@ -61,15 +61,14 @@ static THD_FUNCTION(DetectObst, arg) {
 					set_nbr_rota(ONE_TURN_90_DEG);
 					steps_to_reach += STEPS_TURN;
 				}
-				chThdSleepMilliseconds(50); //10?
+				chThdSleepMilliseconds(50);
 			}
 		}
     	// PID BEGINS
-
     	// checks if we've avoided an obstacle and therefore need to rectify
 		if ((steps_to_reach != ZERO_STEP) && (get_bool(ROTA_TYPE) == true)){
 			uint16_t prox_near_obst = 0; // will stock the value of the concerned proximity sensor
-			int16_t error = 0; // error for PID
+			int16_t error_PID = 0; // error for PID
 
 			if (steps_to_reach > ZERO_STEP){	// checks which values' sensor we need to look at, >0 so we turned right
 				prox_near_obst = get_calibrated_prox(IR6);
@@ -78,13 +77,13 @@ static THD_FUNCTION(DetectObst, arg) {
 				}
 			//chprintf((BaseSequentialStream *)&SD3,"Capteur : %-7d\r\n", prox_near_obst);
 
-			error = OBST_THRES_SIDE - prox_near_obst;
+			error_PID = OBST_THRES_SIDE - prox_near_obst;
 
-			if(abs(error) < ERROR_THRES){
-				error = 0;
+			if(abs(error_PID) < ERROR_THRES){
+				error_PID = 0;
 			}
 
-			sum_error += error;
+			sum_error += error_PID;
 
 			if(sum_error > MAX_SUM_ERROR){	// to avoid an uncontrolled growth
 			sum_error = MAX_SUM_ERROR;
@@ -92,14 +91,14 @@ static THD_FUNCTION(DetectObst, arg) {
 			sum_error = -MAX_SUM_ERROR;
 			}
 
-			speed_PID = KP * error + KI * sum_error; // speed of the right or left wheel to add to the base speed
+			speed_PID = KP * error_PID + KI * sum_error + KD * (error_PID - prev_error); // speed of the right or left wheel to add to the base speed
 			time_1 = chVTGetSystemTime();
 			if (steps_to_reach > ZERO_STEP){
 				set_speed_rota(-speed_PID);
 			} else {
 				set_speed_rota(speed_PID);
 			}
-			//chprintf((BaseSequentialStream *)&SD3,"Capteur : %-7d Erreur : %-7d Speed_PID : %-7d Time : %-7d\r\n", prox_near_obst, error, speed_PID, time_1);
+			prev_error = error_PID;
 
 			if(abs(left_motor_get_pos() - right_motor_get_pos()) < STEPS_THRESHOLD){
 				steps_to_reach = 0;
@@ -107,14 +106,14 @@ static THD_FUNCTION(DetectObst, arg) {
 				set_bool(FORWARD, 1);
 				sum_error = 0;
 			}
-
 		}
+			//chprintf((BaseSequentialStream *)&SD3,"Time_PID : %-7d\r\n", time_1);
 			chThdSleepUntilWindowed(time, time + MS2ST(20));  // 50 Hz, thread lasts around ms
 	}
 
 }
 
 void detect_obst_start(void){
-	chThdCreateStatic(waDetectObst, sizeof(waDetectObst), NORMALPRIO, DetectObst, NULL);
+	chThdCreateStatic(waDetectObst, sizeof(waDetectObst), NORMALPRIO+1, DetectObst, NULL);
 }
 

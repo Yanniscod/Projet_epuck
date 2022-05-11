@@ -26,11 +26,12 @@ extern "C" {
 #define ERROR_THRES 10
 //PID
 #define MAX_SUM_ERROR 5000 // lower than maximum speed (1000 step/s) divided by KI, so maximum 10000 -> we chose 5000
-#define KP 1.70f
-#define KI 0.1f
+#define KP 0.50f
+#define KI 0.05f
+#define KD KP
 
 //move.c
-#define GO 0
+#define GO_DRIBBLE 0
 #define FORWARD 1
 #define ROTA_TYPE 2
 #define ZERO_SPEED 0 //[step/s]
@@ -41,7 +42,8 @@ extern "C" {
 #define STEPS_TURN 319 // number of steps needed for a 90 degrees turn
 #define STEPS_THRESHOLD 15 //[steps]
 #define ZERO_STEP 0 //[steps]
-#define DISTANCE_PUCK 800 //[steps], distance between the pucks 8cm
+#define DISTANCE_PUCK 800 //[steps], distance between the pucks (=10cm)
+//different states used for the first part of the project
 #define ZERO_POS 0
 #define RESET_STEPS 1
 #define ROTATION 2
@@ -59,9 +61,7 @@ extern messagebus_t bus;
 extern parameter_namespace_t parameter_root;
 
 void SendUint8ToComputer(uint8_t* data, uint16_t size);
-//void detect_obst(void);
-//void rotate_one_sec(int angle);
-//int speed_2_deg_rota(int speed);
+
 #ifdef __cplusplus
 }
 #endif

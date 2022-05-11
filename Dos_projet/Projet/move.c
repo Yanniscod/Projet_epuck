@@ -8,7 +8,7 @@
 #include <process_image.h>
 #include <motors.h>
 
-static bool go = 0; // 0 if the robot doesn't move, 1 if it does || 0 = stop 1 = go
+static bool go_dribble = 0; // 0 if the robot doesn't move, 1 if it does || 0 = stop 1 = go
 static bool forward = 0; // 0 if it has to rotate, 1 if it has to go straightforward
 static bool rota_type = 0; // 0 if it's the rotation to avoid the obstacle, 1 if it's to rectify the initial direction
 static bool tourne = true;
@@ -17,6 +17,7 @@ static int8_t turns = 0;
 //static bool got_puck = false;
 
 systime_t time;
+systime_t time_2;
 static THD_WORKING_AREA(waMove, 64); // 27? (6x1 + 16x1 + 8x2) +arg_fcts(16x1 + 4x8  + 1x1) = 38 + 49 = 87
 static THD_FUNCTION(Move, arg) {
 
@@ -25,8 +26,8 @@ static THD_FUNCTION(Move, arg) {
 
 	while(1){
 		time = chVTGetSystemTime();
-
-		if(go == true){
+		time_2 = chVTGetSystemTime();
+		if(go_dribble){
 			if(forward){
 				right_motor_set_speed(BASE_MOTOR_SPEED);
 				left_motor_set_speed(BASE_MOTOR_SPEED);
@@ -41,6 +42,7 @@ static THD_FUNCTION(Move, arg) {
 			move_puck();
 			}
 		}
+		//chprintf((BaseSequentialStream *)&SD3,"Time_Move : %-7d\r\n", time_2);
 		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
 
 	}
@@ -56,8 +58,8 @@ void set_nbr_rota(int8_t nbr_90_turns){
 
 void set_bool(int8_t bool_num, bool type){
 	switch(bool_num){
-	case GO:
-		go = type;
+	case GO_DRIBBLE:
+		go_dribble = type;
 		break;
 	case FORWARD:
 		forward = type;
@@ -73,8 +75,8 @@ void set_bool(int8_t bool_num, bool type){
 int8_t get_bool(int8_t bool_num){
 	bool status = false;
 	switch(bool_num){
-	case GO:
-		status = go;
+	case GO_DRIBBLE:
+		status = go_dribble;
 		break;
 	case FORWARD:
 		status = forward;
@@ -163,7 +165,7 @@ void move_puck(void){
 		break;
 
 	case GO_TO_GOAL: // end of taking puck ready for obstacle avoidance
-		set_bool(GO, 1);
+		set_bool(GO_DRIBBLE, 1);
 		right_motor_set_speed(BASE_MOTOR_SPEED);//a enlever apres test
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 		if(get_ready_to_score()){

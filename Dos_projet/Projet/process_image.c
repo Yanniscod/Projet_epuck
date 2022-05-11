@@ -133,7 +133,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 			else if((nbr_lines==1) | (nbr_lines==2)){
 				//leds_nbr_lines();
 				img_captured=true;
-				chThdSleepMilliseconds(2000);
+				//chThdSleepMilliseconds(2000);
 				goal=2;// quand image captured va detect goal line
 			}
 			else{	//image not 1 or 2 lines retake image
@@ -174,7 +174,7 @@ void detect_goal_line (uint8_t *buffer){
 		mean_count=0;
 	}
 	if(mean_count>3){
-		set_bool(GO,0);
+		set_bool(GO_DRIBBLE,0);
 		ready_to_score=true;
 		palSetPad(GPIOB,GPIOB_LED_BODY);
 	}
