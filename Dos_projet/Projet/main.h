@@ -57,6 +57,8 @@ extern "C" {
 #define WIDTH_SLOPE 5
 #define DETECT_LINE 1
 #define DETECT_GOAL 2
+#define DARK_PXL_MEAN 24
+#define NBR_DARK_IMG 3
 
 /** Robot wide IPC bus. */
 extern messagebus_t bus;
