@@ -38,6 +38,7 @@ extern "C" {
 #define BASE_MOTOR_SPEED 350 //[steps/s]
 #define ZERO_TURN 0
 #define ONE_TURN_90_DEG 1
+#define TWO_TURN 2
 // steps values set experimentally
 #define STEPS_TURN 319 // number of steps needed for a 90 degrees turn
 #define STEPS_THRESHOLD 15 //[steps]
@@ -54,6 +55,8 @@ extern "C" {
 #define IMAGE_BUFFER_SIZE	640
 #define MIN_LINE_WIDTH 30
 #define WIDTH_SLOPE 5
+#define DETECT_LINE 1
+#define DETECT_GOAL 2
 
 /** Robot wide IPC bus. */
 extern messagebus_t bus;

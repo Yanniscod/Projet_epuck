@@ -1,3 +1,4 @@
+#include <avoid_obst.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,6 @@
 #include <motors.h>
 #include <camera/po8030.h>
 #include <chprintf.h>
-#include <detect_obst.h>
 #include "sensors/proximity.h"
 #include <process_image.h>
 #include <move.h>
@@ -52,7 +52,7 @@ int main(void){
 	 //starts the camera
 	dcmi_start();
 	po8030_start();
-	//process_image_start();
+	process_image_start();
 	move();
 	detect_obst_start();
 	 while(1){

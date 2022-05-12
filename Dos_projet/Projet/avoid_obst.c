@@ -1,13 +1,14 @@
+#include <avoid_obst.h>
 #include "ch.h"
 #include "hal.h"
 #include <math.h>
 #include <usbcfg.h>
 #include <chprintf.h>
-#include <detect_obst.h>
 #include <move.h>
 #include <main.h>
 #include <motors.h>
 #include <process_image.h>
+#include "sensors/proximity.h"
 
 static THD_WORKING_AREA(waDetectObst, 200); // 200 (80 fonctionne) bits needed (16x8 + 8x1 + 32x2 (float))
 static THD_FUNCTION(DetectObst, arg) {

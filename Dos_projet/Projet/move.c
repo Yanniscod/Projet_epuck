@@ -7,6 +7,7 @@
 #include <main.h>
 #include <process_image.h>
 #include <motors.h>
+#include <avoid_obst.h>
 
 static bool go_dribble = 0; // 0 if the robot doesn't move, 1 if it does || 0 = stop 1 = go
 static bool forward = 0; // 0 if it has to rotate, 1 if it has to go straightforward
@@ -38,13 +39,12 @@ static THD_FUNCTION(Move, arg) {
 					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 				}
 		}else{
-			if((get_img_captured())/*&& (!got_puck)*/ ){
+			if(get_img_captured()){
 			move_puck();
 			}
 		}
 		//chprintf((BaseSequentialStream *)&SD3,"Time_Move : %-7d\r\n", time_2);
 		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
-
 	}
 }
 
@@ -132,25 +132,25 @@ void move_puck(void){
 	case ROTATION:
 		if(!puck){ // first rotation to go towards puck
 			rotate(ONE_TURN_90_DEG);
-			if(!tourne){
+			if(!tourne){ // if rotation done
 				state=RESET_STEPS;
 			}
 		}else{//puck=true
 			if(get_ready_to_score()){// when detect goal rotate 180 to score
-				rotate(2);
-				if(!tourne){
+				rotate(TWO_TURN);
+				if(!tourne){ // if rotation done
 					state=END;
 				}
 			}else{ // got puck and go towards goal
-				rotate(1);
-				if(!tourne){
+				rotate(ONE_TURN_90_DEG);
+				if(!tourne){ //if rotation done
 					state=GO_TO_GOAL;
 				}
 			}
 		}
 		break;
 
-	case MOVE_TO_PUCK: //move towards puck to pick it
+	case MOVE_TO_PUCK: //move towards puck to pick it up
 		nbr_puck=get_nbr_lines();
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
@@ -182,6 +182,5 @@ void move_puck(void){
 	default:
 		break;
 	}
-
 }
 
