@@ -38,6 +38,7 @@ extern "C" {
 #define BASE_MOTOR_SPEED 350 //[steps/s]
 #define ZERO_TURN 0
 #define ONE_TURN_90_DEG 1
+#define TWO_TURN 2
 // steps values set experimentally
 #define STEPS_TURN 319 // number of steps needed for a 90 degrees turn
 #define STEPS_THRESHOLD 15 //[steps]

@@ -73,13 +73,11 @@ static THD_FUNCTION(ProcessImage, arg) {
 				chThdSleepMilliseconds(200);
 			}		
 			else if((nbr_lines==1) | (nbr_lines==2)){//image captured is correct( 1 or 2 lines)
-				//leds_nbr_lines();
 				img_captured=true;
 				img_to_detect=DETECT_GOAL;// quand image captured va detect goal line
 			}
 			else{	//image not 1 or 2 lines retake image
 				count_img_line=0;
-				//chThdSleepMilliseconds(50);
 			}
 			break;
 

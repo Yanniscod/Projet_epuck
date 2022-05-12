@@ -52,7 +52,7 @@ int main(void){
 	 //starts the camera
 	dcmi_start();
 	po8030_start();
-	//process_image_start();
+	process_image_start();
 	move();
 	detect_obst_start();
 	 while(1){
