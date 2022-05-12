@@ -16,23 +16,20 @@ static bool img_captured = false;
 static uint8_t img_to_detect=DETECT_LINE;
 static bool ready_to_score=false;
 //semaphore
-
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
-
-
 
 static THD_WORKING_AREA(waCaptureImage, 256);
 static THD_FUNCTION(CaptureImage, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
-	//Takes pixels 0 to IMAGE_BUFFER_SIZE of the line 10 + 11 (minimum 2 lines because reasons)
+	//Takes pixels 0 to IMAGE_BUFFER_SIZE of the line 90 from the top
 	po8030_advanced_config(FORMAT_RGB565, 0, 90, IMAGE_BUFFER_SIZE, 2, SUBSAMPLING_X1, SUBSAMPLING_X1); //change line of pixel
 	dcmi_enable_double_buffering();
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
     while(1){
-		dcmi_capture_start();        //starts a capture	
+		dcmi_capture_start(); //starts a capture	
 		wait_image_ready();//waits for the capture to be done
 		chBSemSignal(&image_ready_sem);//signals an image has been captured
     }
@@ -46,14 +43,11 @@ static THD_FUNCTION(ProcessImage, arg) {
     uint8_t prev_nbr_lines=0;
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	bool send_to_computer = true;  //c'est pour voir python
     while(1){
         chBSemWait(&image_ready_sem);//waits until an image has been captured		   
 		img_buff_ptr = dcmi_get_last_image_ptr();//gets the pointer to the array filled with the last image in RGB565 
 
 		for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){	//Extracts only the red pixels
-			//extracts first 5bits of the first byte
-			//takes nothing from the second byte
 			image[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
 		}
 		switch (img_to_detect){
@@ -72,17 +66,17 @@ static THD_FUNCTION(ProcessImage, arg) {
 				prev_nbr_lines=nbr_lines;
 				chThdSleepMilliseconds(200);
 			}		
-			else if((nbr_lines==1) | (nbr_lines==2)){//image captured is correct( 1 or 2 lines)
+			else if((nbr_lines==1) | (nbr_lines==2)){//image captured is correct( 1 or 2 lines detected)
 				img_captured=true;
-				img_to_detect=DETECT_GOAL;// quand image captured va detect goal line
+				img_to_detect=DETECT_GOAL;// once image of lines captured tries to detect the goal
 			}
-			else{	//image not 1 or 2 lines retake image
+			else{	//image does not have 1 or 2 lines -> retake image
 				count_img_line=0;
 			}
 			break;
 
-		case DETECT_GOAL: //detect line to score goal
-			detect_goal_line(image);
+		case DETECT_GOAL: //detect black to score goal
+			detect_goal(image);
 			chThdSleepMilliseconds(50);
 			break;
 
@@ -130,14 +124,15 @@ void find_nbr_lines(uint8_t *buffer){
 	}		
 }
 
-void detect_goal_line (uint8_t *buffer){
+//want 4 images in a row with mean intensity <25:changes with ambient light
+void detect_goal (uint8_t *buffer){ 
 	static uint16_t mean=0;
 	static uint8_t mean_count=0;
 	for(uint16_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
 		mean+=buffer[i];
 	}
 	mean/=IMAGE_BUFFER_SIZE;
-	if(mean<DARK_PXL_MEAN){//want 4 images in a row with mean intensity <25:changes with ambient light
+	if(mean<DARK_PXL_MEAN){
 		mean_count+=1;
 	}else{
 		mean_count=0;
@@ -145,9 +140,7 @@ void detect_goal_line (uint8_t *buffer){
 	if(mean_count>NBR_DARK_IMG){
 		set_bool(GO_DRIBBLE,0);
 		ready_to_score=true;
-		//palSetPad(GPIOB,GPIOB_LED_BODY);
 	}
-	//chprintf((BaseSequentialStream *)&SD3,"moyenne = %-7d\r\n",mean);
 }
 
 uint8_t get_nbr_lines(void){

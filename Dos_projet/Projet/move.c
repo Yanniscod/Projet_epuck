@@ -106,14 +106,14 @@ void rotate(int8_t nbr_90_turns){
 
 void move_puck(void){
 	static uint8_t nbr_puck;
-	static uint8_t state=1;
+	static uint8_t state=RESET_STEPS;
 	static bool puck = false;
 
 	switch (state){
-	case RESET_STEPS : // steps at 0 for rotation
+	case RESET_STEPS : //need steps at 0 for rotation
 		right_motor_set_pos(ZERO_POS);
 		left_motor_set_pos(ZERO_POS);
-		if(!tourne){
+		if(!tourne){	//if first rotation done moves towars puck
 			state=MOVE_TO_PUCK;
 		}
 		else{
@@ -128,7 +128,7 @@ void move_puck(void){
 				state=RESET_STEPS;
 			}
 		}else{//puck=true
-			if(get_ready_to_score()){// when detect goal rotate 180 to score
+			if(get_ready_to_score()){// when detect goal rotate 180 degrees to score
 				rotate(TWO_TURN);
 				if(!tourne){ // if rotation done
 					state=END;
@@ -150,7 +150,7 @@ void move_puck(void){
 		if(left_motor_get_pos()>nbr_puck*DISTANCE_PUCK){ //check if reach puck before rotating to pick it
 			right_motor_set_speed(ZERO_SPEED);
 			left_motor_set_speed(ZERO_SPEED);
-			tourne=!tourne;
+			tourne=!tourne;		//ready for another rotation
 			puck=true;
 			state=RESET_STEPS;
 		}
@@ -158,15 +158,13 @@ void move_puck(void){
 
 	case GO_TO_GOAL: // end of taking puck ready for obstacle avoidance
 		set_bool(GO_DRIBBLE, 1);
-		right_motor_set_speed(BASE_MOTOR_SPEED);//a enlever apres test
-		left_motor_set_speed(BASE_MOTOR_SPEED);
 		if(get_ready_to_score()){
 			tourne=true;
 			state=RESET_STEPS;
 		}
 		break;
 
-	case END: //goal scored stop moving maybe LEDS or MUSIC???
+	case END: //goal scored stop moving 
 		right_motor_set_speed(ZERO_SPEED);
 		left_motor_set_speed(ZERO_SPEED);
 		break;
