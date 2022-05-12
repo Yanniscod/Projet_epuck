@@ -1,3 +1,4 @@
+#include <avoid_obst.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,6 @@
 #include <motors.h>
 #include <camera/po8030.h>
 #include <chprintf.h>
-#include <detect_obst.h>
 #include "sensors/proximity.h"
 #include <process_image.h>
 #include <move.h>
