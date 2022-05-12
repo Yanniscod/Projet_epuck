@@ -27,7 +27,7 @@ static THD_FUNCTION(CaptureImage, arg) {
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 	//Takes pixels 0 to IMAGE_BUFFER_SIZE of the line 10 + 11 (minimum 2 lines because reasons)
-	po8030_advanced_config(FORMAT_RGB565, 0, 10, IMAGE_BUFFER_SIZE, 2, SUBSAMPLING_X1, SUBSAMPLING_X1); //change line of pixel
+	po8030_advanced_config(FORMAT_RGB565, 0, 90, IMAGE_BUFFER_SIZE, 2, SUBSAMPLING_X1, SUBSAMPLING_X1); //change line of pixel
 	dcmi_enable_double_buffering();
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
@@ -46,7 +46,7 @@ static THD_FUNCTION(ProcessImage, arg) {
     uint8_t prev_nbr_lines=0;
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	//bool send_to_computer = true;  //c'est pour voir python
+	bool send_to_computer = true;  //c'est pour voir python
     while(1){
         chBSemWait(&image_ready_sem);//waits until an image has been captured		   
 		img_buff_ptr = dcmi_get_last_image_ptr();//gets the pointer to the array filled with the last image in RGB565 
@@ -88,7 +88,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 		default:
 			break;
-		}			/*
+		}
 		//send to computer to see img with python
 		if(send_to_computer)
 		{
@@ -97,7 +97,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 		}
 		//invert the bool
 		send_to_computer = !send_to_computer;		
-		*/
+
     }
 }
 void find_nbr_lines(uint8_t *buffer){
@@ -137,15 +137,15 @@ void detect_goal_line (uint8_t *buffer){
 		mean+=buffer[i];
 	}
 	mean/=IMAGE_BUFFER_SIZE;
-	if(mean<28){//want 4 images in a row with mean intensity <25:changes with ambient light
+	if(mean<DARK_PXL_MEAN){//want 4 images in a row with mean intensity <25:changes with ambient light
 		mean_count+=1;
 	}else{
 		mean_count=0;
 	}
-	if(mean_count>3){
+	if(mean_count>NBR_DARK_IMG){
 		set_bool(GO_DRIBBLE,0);
 		ready_to_score=true;
-		palSetPad(GPIOB,GPIOB_LED_BODY);
+		//palSetPad(GPIOB,GPIOB_LED_BODY);
 	}
 	//chprintf((BaseSequentialStream *)&SD3,"moyenne = %-7d\r\n",mean);
 }

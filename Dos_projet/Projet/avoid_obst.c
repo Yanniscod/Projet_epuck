@@ -10,19 +10,19 @@
 #include <process_image.h>
 #include "sensors/proximity.h"
 
-static THD_WORKING_AREA(waDetectObst, 200); // 200 (80 fonctionne) bits needed (16x8 + 8x1 + 32x2 (float))
+static THD_WORKING_AREA(waDetectObst, 200); // 200 bits needed (16x8 + 8x1 + 32x2 (float))
 static THD_FUNCTION(DetectObst, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
     systime_t time;
-    systime_t time_1;
+    //systime_t time_1;
     static int16_t steps_to_reach = 0; //bool possible
 	static float sum_error = 0.0;
 	static float prev_error = 0.0;
 	int16_t speed_PID = 0;
-	set_bool(GO_DRIBBLE, 1);
+	//set_bool(GO_DRIBBLE, 1);
 	set_bool(FORWARD, 1);
 
     while(1){
@@ -30,7 +30,7 @@ static THD_FUNCTION(DetectObst, arg) {
 
     	if(get_bool(FORWARD)){
 			uint16_t prox_1, prox_2, prox_7, prox_8; // for the values of the proximity sensors
-			uint8_t prox_obst = 8; //NO_OBST		 // to know which sensor is the closest to the obstacle, 0 already taken by IR1, so we chose 8
+			uint8_t prox_obst = NO_OBST;		 // to know which sensor is the closest to the obstacle, 0 already taken by IR1, so we chose 8
 			prox_1=get_calibrated_prox(IR1);
 			prox_2=get_calibrated_prox(IR2);
 			prox_7=get_calibrated_prox(IR7);
@@ -76,7 +76,6 @@ static THD_FUNCTION(DetectObst, arg) {
 			} else {
 				prox_near_obst = get_calibrated_prox(IR3);
 				}
-			//chprintf((BaseSequentialStream *)&SD3,"Capteur : %-7d\r\n", prox_near_obst);
 
 			error_PID = OBST_THRES_SIDE - prox_near_obst;
 
@@ -93,7 +92,6 @@ static THD_FUNCTION(DetectObst, arg) {
 			}
 
 			speed_PID = KP * error_PID + KI * sum_error + KD * (error_PID - prev_error); // speed of the right or left wheel to add to the base speed
-			time_1 = chVTGetSystemTime();
 			if (steps_to_reach > ZERO_STEP){
 				set_speed_rota(-speed_PID);
 			} else {
@@ -108,8 +106,7 @@ static THD_FUNCTION(DetectObst, arg) {
 				sum_error = 0;
 			}
 		}
-			//chprintf((BaseSequentialStream *)&SD3,"Time_PID : %-7d\r\n", time_1);
-			chThdSleepUntilWindowed(time, time + MS2ST(20));  // 50 Hz, thread lasts around ms
+			chThdSleepUntilWindowed(time, time + MS2ST(20));  // 50 Hz, thread lasts 20ms
 	}
 
 }
