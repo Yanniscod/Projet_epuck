@@ -54,6 +54,8 @@ extern "C" {
 #define IMAGE_BUFFER_SIZE	640
 #define MIN_LINE_WIDTH 30
 #define WIDTH_SLOPE 5
+#define DETECT_LINE 1
+#define DETECT_GOAL 2
 
 /** Robot wide IPC bus. */
 extern messagebus_t bus;
