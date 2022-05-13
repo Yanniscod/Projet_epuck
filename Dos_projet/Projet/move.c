@@ -10,14 +10,14 @@
 #include <avoid_obst.h>
 
 static bool go_dribble = 0; // 0 if the robot doesn't move towards the goal, 1 if it does
-static bool forward = 0; // 0 if it has to rotate, 1 if it has to go straightforward
+static bool forward = 1; // 0 if it has to rotate, 1 if it has to go straightforward
 static bool rota_type = 0; // 0 if it's the rotation to avoid the obstacle, 1 if it's to rectify the initial direction
 static bool tourne = true;
 static int16_t speed_rota = 0;
 static int8_t turns = 0;
 
 systime_t time;
-static THD_WORKING_AREA(waMove, 46); //  (6x1 + 8x1 + 16x2)
+static THD_WORKING_AREA(waMove, 46); //  (wa = 6x1 + 8x1 + 16x2)
 static THD_FUNCTION(Move, arg) {
 
 	chRegSetThreadName(__FUNCTION__);
@@ -26,21 +26,21 @@ static THD_FUNCTION(Move, arg) {
 	while(1){
 		time = chVTGetSystemTime();
 		if(go_dribble){
-			if(forward){
+			if(forward){ //when it goes towards the goal
 				right_motor_set_speed(BASE_MOTOR_SPEED);
 				left_motor_set_speed(BASE_MOTOR_SPEED);
-			}else if(!rota_type){
+			}else if(!rota_type){ //first rotation
 					rotate(turns);
-				}else{
+				}else{ //rotation to rectify the initial direction
 					right_motor_set_speed(BASE_MOTOR_SPEED - speed_rota);
 					left_motor_set_speed(BASE_MOTOR_SPEED + speed_rota);
 				}
-		}else{
+		}else{ // movements for the beginning and ending of the project
 			if(get_img_captured()){
 			move_puck();
 			}
 		}
-		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz, thread lasts around ms
+		chThdSleepUntilWindowed(time, time + MS2ST(20)); // 50 Hz
 	}
 }
 
@@ -86,15 +86,15 @@ int8_t get_bool(int8_t bool_num){
 	return status;
 }
 
-void rotate(int8_t nbr_90_turns){
-	if(nbr_90_turns >ZERO_TURN){
+void rotate(int8_t nbr_90_turns){ //rotates according to the number of 90 turns set
+	if(nbr_90_turns >ZERO_TURN){	//if nbr_90_turns>0, we need to go right
 		right_motor_set_speed(-BASE_MOTOR_SPEED);
 		left_motor_set_speed(BASE_MOTOR_SPEED);
 		if((left_motor_get_pos()) >= (STEPS_TURN*nbr_90_turns)){
 			rota_type = true;
 			tourne=false;
 		}
-	}else{
+	}else{ //left rotation
 		right_motor_set_speed(BASE_MOTOR_SPEED);
 		left_motor_set_speed(-BASE_MOTOR_SPEED);
 		if((left_motor_get_pos()) <= (STEPS_TURN*nbr_90_turns)){

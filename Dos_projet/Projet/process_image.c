@@ -83,14 +83,6 @@ static THD_FUNCTION(ProcessImage, arg) {
 		default:
 			break;
 		}
-		//send to computer to see img with python
-		if(send_to_computer)
-		{
-		//sends to the computer the image
-		SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
-		}
-		//invert the bool
-		send_to_computer = !send_to_computer;		
 
     }
 }
@@ -124,7 +116,7 @@ void find_nbr_lines(uint8_t *buffer){
 	}		
 }
 
-//want 4 images in a row with mean intensity <25:changes with ambient light
+//want 4 images in a row with mean intensity <DARK_PXL_MEAN (changes with ambient light)
 void detect_goal (uint8_t *buffer){ 
 	static uint16_t mean=0;
 	static uint8_t mean_count=0;

@@ -22,8 +22,6 @@ static THD_FUNCTION(DetectObst, arg) {
 	static float sum_error = 0.0;
 	static float prev_error = 0.0;
 	int16_t speed_PID = 0;
-	//set_bool(GO_DRIBBLE, 1);
-	set_bool(FORWARD, 1);
 
     while(1){
     	time = chVTGetSystemTime();
